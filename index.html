@@ -287,7 +287,7 @@
         </div>
 
         <div class="row">
-            <button id="btnAddMarker" class="btn-main">📍 Adicionar Marca (Tempo Atual)</button>
+            <button id="btnAddMarker" class="btn-main">📍 Marcar (com vídeo em Play)</button>
         </div>
     </div>
 
@@ -445,11 +445,10 @@
             const endLabel = getLabel(i + 1);
             const isActive = (activeLoopIndex === i);
             
-            // Botão de fundir só aparece se houver um próximo trecho
             let mergeBtnHTML = '';
             if (i < markers.length - 2) {
                 const nextEndLabel = getLabel(i + 2);
-                mergeBtnHTML = `<button class="btn-merge" onclick="mergeLoop(${i})" title="Fundir com o próximo trecho">🔗 ${startLabel}➔${nextEndLabel}</button>`;
+                mergeBtnHTML = `<button class="btn-merge" onclick="mergeLoop(${i})" title="Fundir com o próximo trecho">🔗 Fundir ${startLabel}➔${nextEndLabel}</button>`;
             }
             
             const div = document.createElement('div');
@@ -457,37 +456,29 @@
             
             div.innerHTML = `
                 <div class="loop-header">
-                    <span>${startLabel} ➔ ${endLabel}</span>
-                    <div style="display:flex; gap:5px;">
-                        ${mergeBtnHTML}
-                        <button class="${isActive ? 'btn-stop' : 'btn-play'}" onclick="toggleLoop(${i})">
-                            ${isActive ? 'Parar' : 'Treinar'}
-                        </button>
+                    <span>Trecho ${startLabel} ➔ ${endLabel}</span>
+                    <button class="${isActive ? 'btn-stop' : 'btn-play'}" onclick="toggleLoop(${i})">
+                        ${isActive ? 'Parar' : 'Treinar'}
+                    </button>
+                </div>
+                
+                <div class="loop-controls" style="justify-content: center; gap: 15px; margin-top: 5px;">
+                    <div class="time-adjuster">
+                        <button onclick="adjustMarker(${i}, -${ADJUST_STEP})">-</button>
+                        <span class="time-display">${markers[i].toFixed(1)}s</span>
+                        <button onclick="adjustMarker(${i}, ${ADJUST_STEP})">+</button>
+                    </div>
+
+                    <span style="color: #666; font-size: 16px;">➔</span>
+
+                    <div class="time-adjuster">
+                        <button onclick="adjustMarker(${i + 1}, -${ADJUST_STEP})">-</button>
+                        <span class="time-display">${markers[i+1].toFixed(1)}s</span>
+                        <button onclick="adjustMarker(${i + 1}, ${ADJUST_STEP})">+</button>
                     </div>
                 </div>
-                <div class="loop-controls">
-                    
-                    <div class="adjuster-container">
-                        <span class="time-label">Início (${startLabel})</span>
-                        <div class="time-adjuster">
-                            <button onclick="adjustMarker(${i}, -${ADJUST_STEP})">-</button>
-                            <span class="time-display">${markers[i].toFixed(1)}s</span>
-                            <button onclick="adjustMarker(${i}, ${ADJUST_STEP})">+</button>
-                        </div>
-                    </div>
 
-                    <span class="time-label" style="margin-top:15px;">até</span>
-
-                    <div class="adjuster-container">
-                        <span class="time-label">Fim (${endLabel})</span>
-                        <div class="time-adjuster">
-                            <button onclick="adjustMarker(${i + 1}, -${ADJUST_STEP})">-</button>
-                            <span class="time-display">${markers[i+1].toFixed(1)}s</span>
-                            <button onclick="adjustMarker(${i + 1}, ${ADJUST_STEP})">+</button>
-                        </div>
-                    </div>
-
-                </div>
+                ${mergeBtnHTML ? `<div style="display: flex; justify-content: center; margin-top: 10px;">${mergeBtnHTML}</div>` : ''}
             `;
             loopsContainer.appendChild(div);
         }
