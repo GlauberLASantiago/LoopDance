@@ -1,0 +1,500 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>LoopDance</title>
+    <!-- Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🩰</text></svg>">
+    
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#121212">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="LoopDance">
+    
+    <style>
+        :root {
+            --bg-color: #121212;
+            --panel-bg: #1e1e1e;
+            --text-color: #ffffff;
+            --accent: #ff9800;
+            --accent-hover: #e68900;
+            --border: #333333;
+        }
+
+        body {
+            margin: 0;
+            padding: 10px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            flex: 1; /* Permite que o container ocupe o espaço disponível empurrando o rodapé */
+        }
+
+        .header {
+            text-align: center;
+            margin: 0;
+            padding: 10px 0;
+            color: var(--accent);
+            font-size: 24px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .video-wrapper {
+            width: 100%;
+            background-color: #000;
+            border-radius: 8px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        video {
+            width: 100%;
+            display: block;
+        }
+
+        .control-panel {
+            background-color: var(--panel-bg);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+        }
+
+        button {
+            background-color: var(--border);
+            color: var(--text-color);
+            border: none;
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            flex: 1;
+            transition: background-color 0.2s;
+            touch-action: manipulation;
+        }
+
+        button:active {
+            background-color: #555;
+        }
+
+        .btn-main {
+            background-color: var(--accent);
+            color: #000;
+            font-weight: bold;
+            padding: 15px;
+            font-size: 18px;
+        }
+
+        .btn-danger {
+            background-color: transparent;
+            color: #d32f2f;
+            border: 1px solid #d32f2f;
+            padding: 10px;
+            margin-top: 10px;
+        }
+
+        .btn-danger:active {
+            background-color: #331010;
+        }
+
+        .btn-play {
+            background-color: #4CAF50;
+            color: white;
+            padding: 8px 15px;
+            flex: none;
+        }
+        
+        .btn-stop {
+            background-color: #f44336;
+            color: white;
+            padding: 8px 15px;
+            flex: none;
+        }
+
+        input[type="range"] {
+            flex: 2;
+            height: 30px;
+        }
+
+        .speed-val {
+            min-width: 45px;
+            text-align: right;
+            font-family: monospace;
+            font-size: 16px;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .file-label {
+            background-color: #444;
+            color: white;
+            font-weight: bold;
+            text-align: center;
+            padding: 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: block;
+            border: 1px solid var(--border);
+        }
+
+        .saved-loops {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .loop-item {
+            display: flex;
+            flex-direction: column;
+            background-color: #2a2a2a;
+            padding: 12px;
+            border-radius: 6px;
+            border: 2px solid transparent;
+            gap: 10px;
+        }
+
+        .loop-item.active-loop {
+            border-color: var(--accent);
+            background-color: #332b1f;
+        }
+
+        .loop-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .loop-controls {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 5px;
+        }
+
+        .time-adjuster {
+            display: flex;
+            align-items: center;
+            background-color: #111;
+            border-radius: 6px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+        }
+
+        .time-adjuster button {
+            background-color: transparent;
+            color: var(--text-color);
+            border: none;
+            padding: 8px 12px;
+            font-size: 18px;
+            flex: none;
+            border-radius: 0;
+        }
+        
+        .time-adjuster button:active {
+            background-color: #333;
+        }
+
+        .time-adjuster .time-display {
+            padding: 0 10px;
+            font-family: monospace;
+            color: var(--accent);
+            font-size: 15px;
+            min-width: 50px;
+            text-align: center;
+        }
+
+        .time-label {
+            color: #aaa;
+            font-size: 12px;
+            margin-bottom: 2px;
+        }
+
+        .adjuster-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 20px 0;
+            font-size: 12px;
+            color: #666;
+            margin-top: auto;
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1 class="header">👞 LoopDance</h1>
+
+    <label class="file-label">
+        📁 Selecionar Vídeo
+        <input type="file" id="videoUpload" accept="video/*">
+    </label>
+
+    <div class="video-wrapper">
+        <video id="videoPlayer" controls playsinline></video>
+    </div>
+
+    <div class="control-panel">
+        <div class="row">
+            <span>Velocidade:</span>
+            <input type="range" id="speedSlider" min="0.25" max="1" step="0.05" value="1">
+            <span class="speed-val" id="speedValue">1.00x</span>
+        </div>
+
+        <div class="row">
+            <button id="btnAddMarker" class="btn-main">📍 Adicionar Marca (Tempo Atual)</button>
+        </div>
+    </div>
+
+    <div class="control-panel" id="loopsPanel" style="display: none;">
+        <h3 style="margin: 0; font-size: 16px;">Trechos</h3>
+        <div class="saved-loops" id="loopsContainer">
+            <!-- Loops serão injetados aqui -->
+        </div>
+        <button id="btnClearMarkers" class="btn-danger">Limpar Todas as Marcas</button>
+    </div>
+
+</div>
+
+<footer class="footer">
+    Desenvolvido por Glauber Santiago
+</footer>
+
+<script>
+    const video = document.getElementById('videoPlayer');
+    const upload = document.getElementById('videoUpload');
+    const speedSlider = document.getElementById('speedSlider');
+    const speedValue = document.getElementById('speedValue');
+    
+    const btnAddMarker = document.getElementById('btnAddMarker');
+    const btnClearMarkers = document.getElementById('btnClearMarkers');
+    const loopsPanel = document.getElementById('loopsPanel');
+    const loopsContainer = document.getElementById('loopsContainer');
+
+    // Array que armazenará os tempos (em segundos) de cada marcação
+    let markers = []; 
+    // Índice do loop que está tocando no momento (baseado no índice inicial do markers)
+    let activeLoopIndex = -1; 
+    
+    const ADJUST_STEP = 0.1; // Quantidade de segundos a alterar em cada clique
+
+    // Service Worker Minimalista para PWA (permite instalação local)
+    if ('serviceWorker' in navigator) {
+        // Um Service Worker inline básico apenas para satisfazer os requisitos de instalação do PWA
+        const swCode = `
+            self.addEventListener('install', (e) => { self.skipWaiting(); });
+            self.addEventListener('activate', (e) => { self.clients.claim(); });
+            self.addEventListener('fetch', (e) => { });
+        `;
+        const blob = new Blob([swCode], { type: 'application/javascript' });
+        const swUrl = URL.createObjectURL(blob);
+        navigator.serviceWorker.register(swUrl).catch(err => console.log('SW Reg falhou:', err));
+    }
+
+    // Gerar Manifesto PWA dinamicamente
+    const manifest = {
+        name: "LoopDance",
+        short_name: "LoopDance",
+        start_url: ".",
+        display: "standalone",
+        background_color: "#121212",
+        theme_color: "#121212",
+        icons: [{
+            src: "data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🩰</text></svg>",
+            sizes: "192x192",
+            type: "image/svg+xml"
+        }]
+    };
+    const manifestBlob = new Blob([JSON.stringify(manifest)], {type: 'application/json'});
+    const manifestURL = URL.createObjectURL(manifestBlob);
+    const linkManifest = document.createElement('link');
+    linkManifest.rel = 'manifest';
+    linkManifest.href = manifestURL;
+    document.head.appendChild(linkManifest);
+
+    // Carregar vídeo local
+    upload.addEventListener('change', function(event) {
+        const file = event.target.files[0];
+        if (file) {
+            const fileURL = URL.createObjectURL(file);
+            video.src = fileURL;
+            video.load();
+            clearAllMarkers();
+        }
+    });
+
+    // Controle de Velocidade
+    speedSlider.addEventListener('input', function() {
+        video.playbackRate = this.value;
+        speedValue.textContent = Number(this.value).toFixed(2) + 'x';
+    });
+
+    // Adicionar nova marca no tempo atual do vídeo
+    btnAddMarker.addEventListener('click', () => {
+        const currentTime = video.currentTime;
+        
+        // Evita marcações duplicadas ou muito próximas
+        if (markers.some(m => Math.abs(m - currentTime) < 0.1)) return;
+
+        markers.push(currentTime);
+        markers.sort((a, b) => a - b); 
+        
+        renderLoops();
+    });
+
+    // Limpar tudo
+    btnClearMarkers.addEventListener('click', clearAllMarkers);
+
+    function clearAllMarkers() {
+        if(markers.length > 0 && !confirm("Tem certeza que deseja apagar todas as marcas?")) return;
+        markers = [];
+        activeLoopIndex = -1;
+        renderLoops();
+    }
+
+    // Função auxiliar para gerar letras A, B, C...
+    function getLabel(index) {
+        const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        if (index < 26) return letters[index];
+        return letters[Math.floor(index / 26) - 1] + letters[index % 26];
+    }
+
+    // Ajustar o valor do marcador (botões + e -)
+    window.adjustMarker = function(index, delta) {
+        let newVal = markers[index] + delta;
+        if (newVal < 0) newVal = 0;
+        
+        markers[index] = newVal;
+        markers.sort((a, b) => a - b);
+        
+        // Mantém o vídeo atualizado com a posição se não estiver tocando
+        if(video.paused) {
+             video.currentTime = newVal;
+        }
+
+        activeLoopIndex = -1; // Para o loop por segurança ao editar
+        renderLoops();
+    };
+
+    // Renderizar a interface de loops
+    function renderLoops() {
+        loopsContainer.innerHTML = '';
+        
+        if (markers.length < 2) {
+            loopsPanel.style.display = 'none';
+            return;
+        }
+
+        loopsPanel.style.display = 'flex';
+
+        for (let i = 0; i < markers.length - 1; i++) {
+            const startLabel = getLabel(i);
+            const endLabel = getLabel(i + 1);
+            const isActive = (activeLoopIndex === i);
+            
+            const div = document.createElement('div');
+            div.className = `loop-item ${isActive ? 'active-loop' : ''}`;
+            
+            div.innerHTML = `
+                <div class="loop-header">
+                    <span>${startLabel} ➔ ${endLabel}</span>
+                    <button class="${isActive ? 'btn-stop' : 'btn-play'}" onclick="toggleLoop(${i})">
+                        ${isActive ? 'Parar' : 'Treinar'}
+                    </button>
+                </div>
+                <div class="loop-controls">
+                    
+                    <div class="adjuster-container">
+                        <span class="time-label">Início (${startLabel})</span>
+                        <div class="time-adjuster">
+                            <button onclick="adjustMarker(${i}, -${ADJUST_STEP})">-</button>
+                            <span class="time-display">${markers[i].toFixed(1)}s</span>
+                            <button onclick="adjustMarker(${i}, ${ADJUST_STEP})">+</button>
+                        </div>
+                    </div>
+
+                    <span class="time-label" style="margin-top:15px;">até</span>
+
+                    <div class="adjuster-container">
+                        <span class="time-label">Fim (${endLabel})</span>
+                        <div class="time-adjuster">
+                            <button onclick="adjustMarker(${i + 1}, -${ADJUST_STEP})">-</button>
+                            <span class="time-display">${markers[i+1].toFixed(1)}s</span>
+                            <button onclick="adjustMarker(${i + 1}, ${ADJUST_STEP})">+</button>
+                        </div>
+                    </div>
+
+                </div>
+            `;
+            loopsContainer.appendChild(div);
+        }
+    }
+
+    // Alterna o estado de tocar/parar um loop específico
+    window.toggleLoop = function(index) {
+        if (activeLoopIndex === index) {
+            activeLoopIndex = -1; 
+        } else {
+            activeLoopIndex = index;
+            video.currentTime = markers[index];
+            video.play();
+        }
+        renderLoops();
+    };
+
+    // Motor de repetição de alta precisão
+    function checkLoop() {
+        if (activeLoopIndex !== -1 && markers.length > activeLoopIndex + 1) {
+            let start = markers[activeLoopIndex];
+            let end = markers[activeLoopIndex + 1];
+            
+            if (video.currentTime >= end || video.currentTime < start) {
+                video.currentTime = start;
+                video.play();
+            }
+        }
+        requestAnimationFrame(checkLoop);
+    }
+    requestAnimationFrame(checkLoop);
+
+</script>
+
+</body>
+</html>
