@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -139,6 +138,15 @@
             flex: none;
         }
 
+        .btn-merge {
+            background-color: #5c6bc0;
+            color: white;
+            padding: 8px 12px;
+            flex: none;
+            font-size: 14px;
+            border-radius: 4px;
+        }
+
         input[type="range"] {
             flex: 2;
             height: 30px;
@@ -274,7 +282,7 @@
     <div class="control-panel">
         <div class="row">
             <span>Velocidade:</span>
-            <input type="range" id="speedSlider" min="0.25" max="1" step="0.05" value="1">
+            <input type="range" id="speedSlider" min="0.25" max="1.5" step="0.05" value="1">
             <span class="speed-val" id="speedValue">1.00x</span>
         </div>
 
@@ -313,7 +321,7 @@
     // Índice do loop que está tocando no momento (baseado no índice inicial do markers)
     let activeLoopIndex = -1; 
     
-    const ADJUST_STEP = 0.1; // Quantidade de segundos a alterar em cada clique
+    const ADJUST_STEP = 0.2; // Quantidade de segundos a alterar em cada clique
 
     // Service Worker Minimalista para PWA (permite instalação local)
     if ('serviceWorker' in navigator) {
@@ -413,6 +421,14 @@
         renderLoops();
     };
 
+    // Fundir o trecho atual com o próximo (Remove a marcação intermediária)
+    window.mergeLoop = function(index) {
+        // Exemplo: se unirmos AB e BC, removemos a marca B (que é o índice index + 1)
+        markers.splice(index + 1, 1);
+        activeLoopIndex = -1;
+        renderLoops();
+    };
+
     // Renderizar a interface de loops
     function renderLoops() {
         loopsContainer.innerHTML = '';
@@ -429,15 +445,25 @@
             const endLabel = getLabel(i + 1);
             const isActive = (activeLoopIndex === i);
             
+            // Botão de fundir só aparece se houver um próximo trecho
+            let mergeBtnHTML = '';
+            if (i < markers.length - 2) {
+                const nextEndLabel = getLabel(i + 2);
+                mergeBtnHTML = `<button class="btn-merge" onclick="mergeLoop(${i})" title="Fundir com o próximo trecho">🔗 ${startLabel}➔${nextEndLabel}</button>`;
+            }
+            
             const div = document.createElement('div');
             div.className = `loop-item ${isActive ? 'active-loop' : ''}`;
             
             div.innerHTML = `
                 <div class="loop-header">
                     <span>${startLabel} ➔ ${endLabel}</span>
-                    <button class="${isActive ? 'btn-stop' : 'btn-play'}" onclick="toggleLoop(${i})">
-                        ${isActive ? 'Parar' : 'Treinar'}
-                    </button>
+                    <div style="display:flex; gap:5px;">
+                        ${mergeBtnHTML}
+                        <button class="${isActive ? 'btn-stop' : 'btn-play'}" onclick="toggleLoop(${i})">
+                            ${isActive ? 'Parar' : 'Treinar'}
+                        </button>
+                    </div>
                 </div>
                 <div class="loop-controls">
                     
