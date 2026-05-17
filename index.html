@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -63,11 +62,20 @@
             border-radius: 8px;
             overflow: hidden;
             position: relative;
+            /* Permite interações de arrasto no JS */
+            cursor: grab;
+        }
+        
+        .video-wrapper:active {
+            cursor: grabbing;
         }
 
         video {
             width: 100%;
             display: block;
+            /* Garante que o zoom saia do centro */
+            transform-origin: center center;
+            will-change: transform;
         }
 
         .control-panel {
@@ -309,7 +317,16 @@
             <span class="speed-val" id="speedValue">1.00x</span>
         </div>
 
-        <div class="row">
+        <div class="row" style="margin-top: 5px;">
+            <span>🔍 Zoom:</span>
+            <input type="range" id="zoomSlider" min="1" max="4" step="0.1" value="1">
+            <span class="speed-val" id="zoomValue">1.0x</span>
+        </div>
+        <div style="text-align: center; font-size: 12px; color: #aaa; margin-top: -5px;">
+            (Ou faça pinça no vídeo. Arraste para focar)
+        </div>
+
+        <div class="row" style="margin-top: 5px;">
             <button id="btnAddMarker" class="btn-main">📍 Marcar (com vídeo em Play)</button>
         </div>
     </div>
@@ -334,6 +351,10 @@
     const speedSlider = document.getElementById('speedSlider');
     const speedValue = document.getElementById('speedValue');
     
+    const zoomSlider = document.getElementById('zoomSlider');
+    const zoomValue = document.getElementById('zoomValue');
+    const videoWrapper = document.querySelector('.video-wrapper');
+    
     const btnAddMarker = document.getElementById('btnAddMarker');
     const btnClearMarkers = document.getElementById('btnClearMarkers');
     const loopsPanel = document.getElementById('loopsPanel');
@@ -355,7 +376,8 @@
         if (file) {
             video.src = URL.createObjectURL(file);
             video.load();
-            forceClearAllMarkers();
+            clearAllMarkers(true); // Limpa sem confirmação ao trocar vídeo
+            resetZoom(); // Reseta o zoom no novo vídeo
         }
     });
 
@@ -558,6 +580,124 @@
         requestAnimationFrame(checkLoop);
     }
     requestAnimationFrame(checkLoop);
+
+    // --- SISTEMA DE ZOOM E PAN (MOVIMENTAÇÃO) ---
+    let currentZoom = 1;
+    let panX = 0;
+    let panY = 0;
+    let isDragging = false;
+    let startX, startY, startPanX, startPanY;
+    let initialPinchDist = null;
+    let initialPinchZoom = 1;
+
+    function resetZoom() {
+        currentZoom = 1; panX = 0; panY = 0;
+        zoomSlider.value = 1;
+        zoomValue.textContent = '1.0x';
+        updateTransform();
+    }
+
+    function updateTransform() {
+        video.style.transform = `translate(${panX}px, ${panY}px) scale(${currentZoom})`;
+        // Se tem zoom, bloqueia a rolagem normal da página na área do vídeo para permitir arrastar
+        videoWrapper.style.touchAction = currentZoom > 1 ? 'none' : 'auto';
+    }
+
+    function applyPanBounds() {
+        if (currentZoom === 1) {
+            panX = 0;
+            panY = 0;
+            return;
+        }
+        // Calcula os limites para que o vídeo não saia da área visível quando ampliado
+        const maxPanX = (videoWrapper.clientWidth * currentZoom - videoWrapper.clientWidth) / 2;
+        const maxPanY = (videoWrapper.clientHeight * currentZoom - videoWrapper.clientHeight) / 2;
+        
+        if (panX > maxPanX) panX = maxPanX;
+        if (panX < -maxPanX) panX = -maxPanX;
+        if (panY > maxPanY) panY = maxPanY;
+        if (panY < -maxPanY) panY = -maxPanY;
+    }
+
+    zoomSlider.addEventListener('input', (e) => {
+        currentZoom = parseFloat(e.target.value);
+        zoomValue.textContent = currentZoom.toFixed(1) + 'x';
+        applyPanBounds();
+        updateTransform();
+    });
+
+    // Eventos de Arrasto (Pan) e Pinça
+    const dragStart = (e) => {
+        // Só permite arrastar se tiver zoom
+        if (currentZoom <= 1 && (!e.touches || e.touches.length < 2)) return;
+        isDragging = true;
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        startX = clientX;
+        startY = clientY;
+        startPanX = panX;
+        startPanY = panY;
+    };
+
+    const dragMove = (e) => {
+        if (!isDragging) return;
+        if (e.cancelable) e.preventDefault(); // Previne rolar a tela acidentalmente
+        
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        
+        panX = startPanX + (clientX - startX);
+        panY = startPanY + (clientY - startY);
+        
+        applyPanBounds();
+        updateTransform();
+    };
+
+    const dragEnd = () => { isDragging = false; };
+
+    // Mouse
+    videoWrapper.addEventListener('mousedown', dragStart);
+    window.addEventListener('mousemove', dragMove, { passive: false });
+    window.addEventListener('mouseup', dragEnd);
+    videoWrapper.addEventListener('mouseleave', dragEnd);
+
+    // Toque (Celular)
+    videoWrapper.addEventListener('touchstart', (e) => {
+        if (e.touches.length === 2) {
+            if (e.cancelable) e.preventDefault();
+            isDragging = false;
+            initialPinchDist = Math.hypot(
+                e.touches[0].clientX - e.touches[1].clientX,
+                e.touches[0].clientY - e.touches[1].clientY
+            );
+            initialPinchZoom = currentZoom;
+        } else {
+            dragStart(e);
+        }
+    }, { passive: false });
+
+    videoWrapper.addEventListener('touchmove', (e) => {
+        if (e.touches.length === 2 && initialPinchDist) {
+            if (e.cancelable) e.preventDefault();
+            const dist = Math.hypot(
+                e.touches[0].clientX - e.touches[1].clientX,
+                e.touches[0].clientY - e.touches[1].clientY
+            );
+            // Calcula novo zoom baseado na distância dos dedos limitando entre 1x e 4x
+            currentZoom = Math.min(Math.max(1, initialPinchZoom * (dist / initialPinchDist)), 4);
+            zoomSlider.value = currentZoom;
+            zoomValue.textContent = currentZoom.toFixed(1) + 'x';
+            applyPanBounds();
+            updateTransform();
+        } else if (e.touches.length === 1) {
+            dragMove(e);
+        }
+    }, { passive: false });
+
+    videoWrapper.addEventListener('touchend', (e) => {
+        if (e.touches.length < 2) initialPinchDist = null;
+        if (e.touches.length === 0) dragEnd();
+    });
 
 </script>
 
