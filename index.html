@@ -46,7 +46,7 @@
         .header {
             text-align: center;
             margin: 0;
-            padding: 10px 0;
+            padding: 5px 0 10px 0;
             color: var(--accent);
             font-size: 24px;
             font-weight: bold;
@@ -56,26 +56,42 @@
             gap: 10px;
         }
 
+        /* NOVA ÁREA DE VÍDEO: Margem segura na direita para scroll */
+        .video-area {
+            width: 100%;
+            padding: 0 30px 0 0; /* Sem espaço na esquerda, 30px na direita para rolar a tela */
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .scroll-hint {
+            text-align: center;
+            font-size: 12px;
+            color: #777;
+            margin: 0;
+        }
+
         .video-wrapper {
             width: 100%;
             background-color: #000;
             border-radius: 8px;
             overflow: hidden;
             position: relative;
-            /* Permite interações de arrasto no JS */
-            cursor: grab;
-        }
-        
-        .video-wrapper:active {
-            cursor: grabbing;
+            touch-action: none; /* Bloqueia o scroll nativo APENAS dentro desta caixa */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #444;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
         }
 
         video {
             width: 100%;
             display: block;
-            /* Garante que o zoom saia do centro */
             transform-origin: center center;
-            will-change: transform;
+            transition: transform 0.1s ease-out; /* Suaviza o movimento do zoom */
         }
 
         .control-panel {
@@ -86,6 +102,11 @@
             display: flex;
             flex-direction: column;
             gap: 15px;
+        }
+
+        .top-controls {
+            padding: 10px 15px;
+            gap: 10px;
         }
 
         .row {
@@ -144,6 +165,7 @@
             color: white;
             padding: 8px 15px;
             flex: none;
+            min-width: 80px;
         }
         
         .btn-stop {
@@ -151,6 +173,7 @@
             color: white;
             padding: 8px 15px;
             flex: none;
+            min-width: 80px;
         }
 
         .btn-resume {
@@ -159,6 +182,21 @@
             font-weight: bold;
             padding: 8px 15px;
             flex: none;
+            min-width: 80px;
+        }
+        
+        .btn-merge-inline {
+            background-color: transparent;
+            color: #2196F3;
+            border: 1px solid #2196F3;
+            padding: 8px 12px;
+            font-size: 14px;
+            flex: none;
+            border-radius: 6px;
+        }
+
+        .btn-merge-inline:active {
+            background-color: #1a3b5c;
         }
 
         input[type="range"] {
@@ -166,7 +204,7 @@
             height: 30px;
         }
 
-        .speed-val {
+        .control-val {
             min-width: 45px;
             text-align: right;
             font-family: monospace;
@@ -217,6 +255,12 @@
             font-size: 16px;
             font-weight: bold;
         }
+        
+        .header-actions {
+            display: flex;
+            gap: 15px; 
+            align-items: center;
+        }
 
         .loop-controls {
             display: flex;
@@ -237,26 +281,27 @@
         }
 
         .time-adjuster button {
-            background-color: transparent;
-            color: var(--text-color);
+            background-color: #222;
+            color: var(--accent);
             border: none;
-            padding: 10px 15px;
-            font-size: 20px;
+            padding: 10px 14px; /* Espaçamento reduzido para caber na tela */
+            font-size: 20px; /* Fonte levemente menor */
             flex: none;
             border-radius: 0;
             line-height: 1;
+            font-weight: bold;
         }
         
         .time-adjuster button:active {
-            background-color: #333;
+            background-color: #444;
         }
 
         .time-adjuster .time-display {
-            padding: 0 10px;
+            padding: 0 10px; /* Reduzido o espaço em volta do número */
             font-family: monospace;
-            color: var(--accent);
-            font-size: 16px;
-            min-width: 55px;
+            color: var(--text-color);
+            font-size: 15px; /* Fonte do número menor */
+            min-width: 48px; /* Largura mínima ajustada */
             text-align: center;
         }
 
@@ -264,26 +309,6 @@
             color: #777;
             font-size: 20px;
             font-weight: bold;
-        }
-
-        .merge-container {
-            display: flex;
-            justify-content: center;
-            border-top: 1px dashed #444;
-            padding-top: 10px;
-        }
-
-        .btn-merge {
-            background-color: #2196F3;
-            color: white;
-            padding: 8px 20px;
-            font-size: 14px;
-            flex: none;
-            border-radius: 20px;
-        }
-
-        .btn-merge:active {
-            background-color: #1976D2;
         }
 
         .footer {
@@ -306,31 +331,36 @@
         <input type="file" id="videoUpload" accept="video/*">
     </label>
 
-    <div class="video-wrapper">
-        <video id="videoPlayer" controls playsinline></video>
+    <!-- Controles no topo -->
+    <div class="control-panel top-controls">
+        <div class="row">
+            <span style="font-size: 14px; width: 85px;">Velocidade:</span>
+            <input type="range" id="speedSlider" min="0.25" max="1.50" step="0.05" value="1">
+            <span class="control-val" id="speedValue">1.00x</span>
+        </div>
+        <div class="row">
+            <span style="font-size: 14px; width: 85px;">Zoom:</span>
+            <input type="range" id="zoomSlider" min="1" max="4" step="0.1" value="1">
+            <span class="control-val" id="zoomValue">1.0x</span>
+        </div>
     </div>
 
+    <!-- Container do vídeo com margem direita para scroll -->
+    <div class="video-area">
+        <p class="scroll-hint">↕️ Use a margem direita para rolar a tela</p>
+        <div class="video-wrapper" id="videoContainer">
+            <video id="videoPlayer" controls playsinline></video>
+        </div>
+    </div>
+
+    <!-- Painel de Marcação -->
     <div class="control-panel">
         <div class="row">
-            <span>Velocidade:</span>
-            <input type="range" id="speedSlider" min="0.25" max="1.50" step="0.05" value="1">
-            <span class="speed-val" id="speedValue">1.00x</span>
-        </div>
-
-        <div class="row" style="margin-top: 5px;">
-            <span>🔍 Zoom:</span>
-            <input type="range" id="zoomSlider" min="1" max="4" step="0.1" value="1">
-            <span class="speed-val" id="zoomValue">1.0x</span>
-        </div>
-        <div style="text-align: center; font-size: 12px; color: #aaa; margin-top: -5px;">
-            (Ou faça pinça no vídeo. Arraste para focar)
-        </div>
-
-        <div class="row" style="margin-top: 5px;">
             <button id="btnAddMarker" class="btn-main">📍 Marcar (com vídeo em Play)</button>
         </div>
     </div>
 
+    <!-- Lista de Loops -->
     <div class="control-panel" id="loopsPanel" style="display: none;">
         <h3 style="margin: 0; font-size: 16px;">Trechos da Coreografia</h3>
         <div class="saved-loops" id="loopsContainer">
@@ -347,68 +377,176 @@
 
 <script>
     const video = document.getElementById('videoPlayer');
+    const videoContainer = document.getElementById('videoContainer');
     const upload = document.getElementById('videoUpload');
+    
+    // Controles Topo
     const speedSlider = document.getElementById('speedSlider');
     const speedValue = document.getElementById('speedValue');
-    
     const zoomSlider = document.getElementById('zoomSlider');
     const zoomValue = document.getElementById('zoomValue');
-    const videoWrapper = document.querySelector('.video-wrapper');
     
+    // Controles Loops
     const btnAddMarker = document.getElementById('btnAddMarker');
     const btnClearMarkers = document.getElementById('btnClearMarkers');
     const loopsPanel = document.getElementById('loopsPanel');
     const loopsContainer = document.getElementById('loopsContainer');
 
+    // Variáveis Lógicas do Loop
     let markers = []; 
     let activeLoopIndex = -1; 
     let clearConfirmTimeout;
-    
     const ADJUST_STEP = 0.2; 
+
+    // Variáveis Lógicas do Zoom e Pan
+    let scale = 1;
+    let translateX = 0;
+    let translateY = 0;
+    let isDragging = false;
+    let startX = 0;
+    let startY = 0;
+    let lastDistance = 0;
 
     // Sincronizar Interface com os Eventos Nativos do Vídeo
     video.addEventListener('play', renderLoops);
     video.addEventListener('pause', renderLoops);
 
-    // Carregar vídeo local
+    // ======== PWA ========
+    if ('serviceWorker' in navigator) {
+        const swCode = `
+            self.addEventListener('install', (e) => { self.skipWaiting(); });
+            self.addEventListener('activate', (e) => { self.clients.claim(); });
+            self.addEventListener('fetch', (e) => { });
+        `;
+        const blob = new Blob([swCode], { type: 'application/javascript' });
+        navigator.serviceWorker.register(URL.createObjectURL(blob)).catch(() => {});
+    }
+
+    const manifest = {
+        name: "Loop to Dance",
+        short_name: "Loop to Dance",
+        start_url: ".",
+        display: "standalone",
+        background_color: "#121212",
+        theme_color: "#121212",
+        icons: [{
+            src: "data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🩰</text></svg>",
+            sizes: "192x192",
+            type: "image/svg+xml"
+        }]
+    };
+    const manifestBlob = new Blob([JSON.stringify(manifest)], {type: 'application/json'});
+    document.head.appendChild(Object.assign(document.createElement('link'), {
+        rel: 'manifest', href: URL.createObjectURL(manifestBlob)
+    }));
+
+    // ======== CARREGAR VÍDEO ========
     upload.addEventListener('change', function(event) {
         const file = event.target.files[0];
         if (file) {
             video.src = URL.createObjectURL(file);
             video.load();
-            clearAllMarkers(true); // Limpa sem confirmação ao trocar vídeo
-            resetZoom(); // Reseta o zoom no novo vídeo
+            forceClearAllMarkers();
+            resetZoom();
         }
     });
 
-    // Controle de Velocidade
+    // ======== CONTROLES DE VELOCIDADE E ZOOM ========
     speedSlider.addEventListener('input', function() {
         video.playbackRate = this.value;
         speedValue.textContent = Number(this.value).toFixed(2) + 'x';
     });
 
-    // Adicionar nova marca
+    zoomSlider.addEventListener('input', function() {
+        scale = parseFloat(this.value);
+        applyTransform();
+    });
+
+    function resetZoom() {
+        scale = 1;
+        translateX = 0;
+        translateY = 0;
+        zoomSlider.value = 1;
+        applyTransform();
+    }
+
+    function applyTransform() {
+        const maxTx = (video.clientWidth * scale - videoContainer.clientWidth) / 2;
+        const maxTy = (video.clientHeight * scale - videoContainer.clientHeight) / 2;
+
+        if (maxTx > 0) {
+            translateX = Math.max(Math.min(translateX, maxTx), -maxTx);
+        } else {
+            translateX = 0;
+        }
+
+        if (maxTy > 0) {
+            translateY = Math.max(Math.min(translateY, maxTy), -maxTy);
+        } else {
+            translateY = 0;
+        }
+
+        video.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
+        zoomSlider.value = scale;
+        zoomValue.textContent = scale.toFixed(1) + 'x';
+    }
+
+    // Eventos de toque para Pinch (Zoom) e Pan (Arrastar) - Focado no #videoContainer
+    videoContainer.addEventListener('touchstart', (e) => {
+        if (e.touches.length === 1 && scale > 1) {
+            isDragging = true;
+            startX = e.touches[0].clientX - translateX;
+            startY = e.touches[0].clientY - translateY;
+        } else if (e.touches.length === 2) {
+            isDragging = false;
+            lastDistance = Math.hypot(
+                e.touches[0].clientX - e.touches[1].clientX,
+                e.touches[0].clientY - e.touches[1].clientY
+            );
+        }
+    }, { passive: false });
+
+    videoContainer.addEventListener('touchmove', (e) => {
+        if (e.touches.length === 1 && isDragging && scale > 1) {
+            e.preventDefault(); 
+            translateX = e.touches[0].clientX - startX;
+            translateY = e.touches[0].clientY - startY;
+            applyTransform();
+        } else if (e.touches.length === 2) {
+            e.preventDefault(); 
+            const currentDistance = Math.hypot(
+                e.touches[0].clientX - e.touches[1].clientX,
+                e.touches[0].clientY - e.touches[1].clientY
+            );
+            const delta = currentDistance - lastDistance;
+            scale += delta * 0.01;
+            scale = Math.max(1, Math.min(scale, 4)); 
+            lastDistance = currentDistance;
+            applyTransform();
+        }
+    }, { passive: false });
+
+    videoContainer.addEventListener('touchend', () => {
+        isDragging = false;
+    });
+
+    // ======== LÓGICA DE MARCAÇÕES ========
     btnAddMarker.addEventListener('click', () => {
-        // Arredondar para 1 casa decimal ao criar para evitar bugs matemáticos futuros
         const currentTime = Math.round(video.currentTime * 10) / 10;
-        
         if (markers.some(m => Math.abs(m - currentTime) < 0.2)) return;
         
         markers.push(currentTime);
         markers.sort((a, b) => a - b); 
         
-        // Mantém o loop atual ativo se inserirmos uma marca ANTES dele
         if (activeLoopIndex !== -1) {
             const newIndex = markers.indexOf(currentTime);
             if (newIndex <= activeLoopIndex) {
                 activeLoopIndex++;
             }
         }
-        
         renderLoops();
     });
 
-    // Botão Inteligente de Limpar (Dois Cliques para confirmar)
     btnClearMarkers.addEventListener('click', () => {
         if (markers.length === 0) return;
         
@@ -434,70 +572,50 @@
         renderLoops();
     }
 
-    // Gerador de Letras (A, B, C...)
     function getLabel(index) {
         const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
         if (index < 26) return letters[index];
         return letters[Math.floor(index / 26) - 1] + letters[index % 26];
     }
 
-    // Ajustar o valor do marcador (+ e -)
     window.adjustMarker = function(index, delta) {
         let newVal = markers[index] + delta;
-        
-        // Arredondamento crítico para evitar problemas de ponto flutuante do JavaScript
         newVal = Math.round(newVal * 10) / 10;
         
-        // Bloqueio de colisão (mantém no mínimo 0.2s de distância)
-        if (index > 0 && newVal <= markers[index - 1]) {
-            newVal = markers[index - 1] + 0.2;
-        }
-        if (index < markers.length - 1 && newVal >= markers[index + 1]) {
-            newVal = markers[index + 1] - 0.2;
-        }
+        if (index > 0 && newVal <= markers[index - 1]) newVal = markers[index - 1] + 0.2;
+        if (index < markers.length - 1 && newVal >= markers[index + 1]) newVal = markers[index + 1] - 0.2;
         if (newVal < 0) newVal = 0;
 
-        newVal = Math.round(newVal * 10) / 10; // Arredonda novamente após checagem
+        newVal = Math.round(newVal * 10) / 10;
         markers[index] = newVal;
 
-        // Visualizar o frame se o vídeo estiver pausado
         if (video.paused) {
              video.currentTime = newVal;
         }
-        
         renderLoops();
     };
 
-    // Fundir trechos
     window.mergeLoop = function(index) {
         markers.splice(index + 1, 1);
-        if (activeLoopIndex > index) {
-            activeLoopIndex--;
-        }
+        if (activeLoopIndex > index) activeLoopIndex--;
         renderLoops();
     };
 
-    // Alternar Treinar / Parar / Retomar - LÓGICA TOTALMENTE BLINDADA
     window.toggleLoop = function(index) {
         if (activeLoopIndex === index) {
             if (!video.paused) {
-                // Se está treinando e apertou PARAR -> desativa o loop e pausa o vídeo.
                 activeLoopIndex = -1; 
                 video.pause();
             } else {
-                // Se estava pausado (Retomar) -> Toca o vídeo novamente.
                 video.play();
             }
         } else {
-            // Se clicou em TREINAR em um novo loop
             activeLoopIndex = index;
             video.currentTime = markers[index];
             video.play();
         }
-        // renderLoops é chamado automaticamente pelos eventos play/pause do vídeo
     };
 
-    // Renderizar a lista de Trechos
     function renderLoops() {
         loopsContainer.innerHTML = '';
         
@@ -512,7 +630,6 @@
             const startLabel = getLabel(i);
             const endLabel = getLabel(i + 1);
             
-            // Sincronia perfeita com o estado atual do vídeo
             const isActive = (activeLoopIndex === i);
             const isPlaying = isActive && !video.paused;
             
@@ -535,9 +652,15 @@
             div.innerHTML = `
                 <div class="loop-header">
                     <span>${startLabel} ➔ ${endLabel}</span>
-                    <button class="${btnClass}" onclick="toggleLoop(${i})">
-                        ${btnText}
-                    </button>
+                    <div class="header-actions">
+                        ${i < markers.length - 2 ? `
+                        <button class="btn-merge-inline" onclick="mergeLoop(${i})">
+                            🔗 Juntar
+                        </button>` : ''}
+                        <button class="${btnClass}" onclick="toggleLoop(${i})">
+                            ${btnText}
+                        </button>
+                    </div>
                 </div>
                 
                 <div class="loop-controls">
@@ -555,19 +678,11 @@
                         <button onclick="adjustMarker(${i + 1}, ${ADJUST_STEP})">+</button>
                     </div>
                 </div>
-                
-                ${i < markers.length - 2 ? `
-                <div class="merge-container">
-                    <button class="btn-merge" onclick="mergeLoop(${i})">
-                        🔗 Fundir ${startLabel} ➔ ${getLabel(i+2)}
-                    </button>
-                </div>` : ''}
             `;
             loopsContainer.appendChild(div);
         }
     }
 
-    // Motor de Repetição
     function checkLoop() {
         if (activeLoopIndex !== -1 && markers.length > activeLoopIndex + 1) {
             let start = markers[activeLoopIndex];
@@ -580,124 +695,6 @@
         requestAnimationFrame(checkLoop);
     }
     requestAnimationFrame(checkLoop);
-
-    // --- SISTEMA DE ZOOM E PAN (MOVIMENTAÇÃO) ---
-    let currentZoom = 1;
-    let panX = 0;
-    let panY = 0;
-    let isDragging = false;
-    let startX, startY, startPanX, startPanY;
-    let initialPinchDist = null;
-    let initialPinchZoom = 1;
-
-    function resetZoom() {
-        currentZoom = 1; panX = 0; panY = 0;
-        zoomSlider.value = 1;
-        zoomValue.textContent = '1.0x';
-        updateTransform();
-    }
-
-    function updateTransform() {
-        video.style.transform = `translate(${panX}px, ${panY}px) scale(${currentZoom})`;
-        // Se tem zoom, bloqueia a rolagem normal da página na área do vídeo para permitir arrastar
-        videoWrapper.style.touchAction = currentZoom > 1 ? 'none' : 'auto';
-    }
-
-    function applyPanBounds() {
-        if (currentZoom === 1) {
-            panX = 0;
-            panY = 0;
-            return;
-        }
-        // Calcula os limites para que o vídeo não saia da área visível quando ampliado
-        const maxPanX = (videoWrapper.clientWidth * currentZoom - videoWrapper.clientWidth) / 2;
-        const maxPanY = (videoWrapper.clientHeight * currentZoom - videoWrapper.clientHeight) / 2;
-        
-        if (panX > maxPanX) panX = maxPanX;
-        if (panX < -maxPanX) panX = -maxPanX;
-        if (panY > maxPanY) panY = maxPanY;
-        if (panY < -maxPanY) panY = -maxPanY;
-    }
-
-    zoomSlider.addEventListener('input', (e) => {
-        currentZoom = parseFloat(e.target.value);
-        zoomValue.textContent = currentZoom.toFixed(1) + 'x';
-        applyPanBounds();
-        updateTransform();
-    });
-
-    // Eventos de Arrasto (Pan) e Pinça
-    const dragStart = (e) => {
-        // Só permite arrastar se tiver zoom
-        if (currentZoom <= 1 && (!e.touches || e.touches.length < 2)) return;
-        isDragging = true;
-        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-        startX = clientX;
-        startY = clientY;
-        startPanX = panX;
-        startPanY = panY;
-    };
-
-    const dragMove = (e) => {
-        if (!isDragging) return;
-        if (e.cancelable) e.preventDefault(); // Previne rolar a tela acidentalmente
-        
-        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-        
-        panX = startPanX + (clientX - startX);
-        panY = startPanY + (clientY - startY);
-        
-        applyPanBounds();
-        updateTransform();
-    };
-
-    const dragEnd = () => { isDragging = false; };
-
-    // Mouse
-    videoWrapper.addEventListener('mousedown', dragStart);
-    window.addEventListener('mousemove', dragMove, { passive: false });
-    window.addEventListener('mouseup', dragEnd);
-    videoWrapper.addEventListener('mouseleave', dragEnd);
-
-    // Toque (Celular)
-    videoWrapper.addEventListener('touchstart', (e) => {
-        if (e.touches.length === 2) {
-            if (e.cancelable) e.preventDefault();
-            isDragging = false;
-            initialPinchDist = Math.hypot(
-                e.touches[0].clientX - e.touches[1].clientX,
-                e.touches[0].clientY - e.touches[1].clientY
-            );
-            initialPinchZoom = currentZoom;
-        } else {
-            dragStart(e);
-        }
-    }, { passive: false });
-
-    videoWrapper.addEventListener('touchmove', (e) => {
-        if (e.touches.length === 2 && initialPinchDist) {
-            if (e.cancelable) e.preventDefault();
-            const dist = Math.hypot(
-                e.touches[0].clientX - e.touches[1].clientX,
-                e.touches[0].clientY - e.touches[1].clientY
-            );
-            // Calcula novo zoom baseado na distância dos dedos limitando entre 1x e 4x
-            currentZoom = Math.min(Math.max(1, initialPinchZoom * (dist / initialPinchDist)), 4);
-            zoomSlider.value = currentZoom;
-            zoomValue.textContent = currentZoom.toFixed(1) + 'x';
-            applyPanBounds();
-            updateTransform();
-        } else if (e.touches.length === 1) {
-            dragMove(e);
-        }
-    }, { passive: false });
-
-    videoWrapper.addEventListener('touchend', (e) => {
-        if (e.touches.length < 2) initialPinchDist = null;
-        if (e.touches.length === 0) dragEnd();
-    });
 
 </script>
 
